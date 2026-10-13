@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>SkillProof AI | HackHive</title>
+<style>
+:root{--bg:#0b1220;--panel:#121d30;--line:#26344b;--text:#eef4ff;--muted:#9eb0c9;--accent:#7c9cff;--green:#69e0b2}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top right,#1c2c4c 0,transparent 38%),var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:980px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.brand{font-weight:800;letter-spacing:.3px}.brand span{color:var(--accent)}.pill{border:1px solid var(--line);padding:6px 10px;border-radius:999px;color:var(--muted);font-size:12px}
+.hero{padding:30px 0 20px}.eyebrow{color:var(--green);font-size:12px;letter-spacing:2px;font-weight:800}.hero h1{font-size:clamp(30px,7vw,48px);line-height:1.08;margin:10px 0}.hero p,.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}.card{background:linear-gradient(150deg,#152238,#101827);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 10px 35px #0002}.card h2{font-size:19px;margin:0 0 12px}.field{display:grid;gap:6px;margin:12px 0}.field label{font-size:13px;color:var(--muted)}input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0b1424;color:var(--text);font:inherit}textarea{min-height:90px;resize:vertical}button{cursor:pointer;border:0;border-radius:10px;padding:12px 15px;font-weight:750;background:var(--accent);color:#081020}button.secondary{background:#1b2a42;color:var(--text);border:1px solid var(--line)}button:disabled{opacity:.55;cursor:not-allowed}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.status{margin-top:12px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}.stat{font-size:27px;font-weight:800}.tile{border:1px solid var(--line);padding:14px;border-radius:14px;background:#0d1728}.hidden{display:none}.result{white-space:pre-wrap;background:#0b1424;padding:14px;border-radius:12px;border:1px solid var(--line)}footer{color:var(--muted);font-size:12px;padding:25px 0}a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="brand">SkillProof <span>AI</span></div><div class="pill">HACKHIVE · V2 DEMO</div></header>
+<section class="hero"><div class="eyebrow">RECOGNITION OF PRIOR LEARNING</div><h1>Prove the skills<br>you already have.</h1><p>A prototype for organizing evidence and reviewing skills fairly. This demo uses a mock evaluator, not a real certification authority.</p></section>
+<section id="auth" class="grid">
+  <div class="card"><h2>Create account</h2><p class="muted">Register to save your assessment history on the demo backend.</p>
+    <form id="registerForm"><div class="field"><label for="rname">Display name</label><input id="rname" required maxlength="80" autocomplete="name"></div><div class="field"><label for="remail">Email</label><input id="remail" type="email" required maxlength="254" autocomplete="email"></div><div class="field"><label for="rpass">Password (8+ characters)</label><input id="rpass" type="password" required minlength="8" autocomplete="new-password"></div><button>Create account</button></form><div id="registerStatus" class="status"></div>
+  </div>
+  <div class="card"><h2>Welcome back</h2><p class="muted">Sign in to your SkillProof workspace.</p>
+    <form id="loginForm"><div class="field"><label for="lemail">Email</label><input id="lemail" type="email" required autocomplete="email"></div><div class="field"><label for="lpass">Password</label><input id="lpass" type="password" required autocomplete="current-password"></div><button>Log in</button></form><div id="loginStatus" class="status"></div>
+  </div>
+</section>
+<section id="workspace" class="hidden">
+  <div class="top" style="margin:10px 0 18px"><div><div class="muted">YOUR WORKSPACE</div><h2 id="welcome" style="margin:2px 0">Dashboard</h2></div><button id="logout" class="secondary">Log out</button></div>
+  <div class="grid">
+    <div class="card"><h2>New skill assessment</h2><form id="assessmentForm">
+      <div class="field"><label for="skill">Skill area</label><select id="skill" required><option value="">Choose a skill</option><option>Web Development</option><option>Communication</option><option>Data Analysis</option><option>Cybersecurity</option><option>Project Management</option><option>Other</option></select></div>
+      <div class="field"><label for="experience">Your experience and what you can do</label><textarea id="experience" required minlength="20" maxlength="4000" placeholder="Describe projects, tasks, tools, and what you learned (20–4000 characters)."></textarea></div>
+      <div class="field"><label for="evidence">Evidence summary (do not paste passwords or private data)</label><textarea id="evidence" maxlength="2000" placeholder="Describe a portfolio, project, certificate, or practical demonstration."></textarea></div>
+      <button>Evaluate my submission</button></form><div id="assessmentStatus" class="status"></div>
+    </div>
+    <div class="card"><h2>Assessment result</h2><p class="muted">A transparent mock result for prototype testing.</p><div id="result" class="result">Submit an assessment to see your feedback.</div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2>Recent assessments</h2><div id="history" class="muted">Loading…</div></div>
+</section>
+<footer>SkillProof AI · HackHive · Prototype V2. Do not upload sensitive personal information. Assessment feedback is illustrative and is not an official qualification.</footer>
+</div>
+<script>
+const API = (localStorage.getItem("skillproof_api") || "http://127.0.0.1:8000").replace(/\/$/,"");
+let token = sessionStorage.getItem("sp_token") || "";
+const $ = id => document.getElementById(id);
+async function request(path, options={}) {
+  const headers={"Content-Type":"application/json", ...(options.headers||{})};
+  if(token) headers.Authorization="Bearer "+token;
+  let res;
+  try { res=await fetch(API+path,{...options,headers}); }
+  catch(e){throw new Error("Cannot reach the backend. Update the API address for your deployed server, then try again.");}
+  const data=await res.json().catch(()=>({detail:"Unexpected server response"}));
+  if(!res.ok) throw new Error(data.detail || "Request failed");
+  return data;
+}
+function status(id,msg){$(id).textContent=msg;}
+function showWorkspace(user){$("auth").classList.add("hidden");$("workspace").classList.remove("hidden");$("welcome").textContent="Hello, "+(user.name||"there");loadHistory();}
+function showAuth(){$("workspace").classList.add("hidden");$("auth").classList.remove("hidden");}
+$("registerForm").addEventListener("submit",async e=>{e.preventDefault();status("registerStatus","Creating account…");try{const d=await request("/auth/register",{method:"POST",body:JSON.stringify({name:$("rname").value,email:$("remail").value,password:$("rpass").value})});token=d.access_token;sessionStorage.setItem("sp_token",token);showWorkspace(d.user);status("registerStatus","");}catch(err){status("registerStatus",err.message);}});
+$("loginForm").addEventListener("submit",async e=>{e.preventDefault();status("loginStatus","Signing in…");try{const d=await request("/auth/login",{method:"POST",body:JSON.stringify({email:$("lemail").value,password:$("lpass").value})});token=d.access_token;sessionStorage.setItem("sp_token",token);showWorkspace(d.user);status("loginStatus","");}catch(err){status("loginStatus",err.message);}});
+$("logout").addEventListener("click",()=>{token="";sessionStorage.removeItem("sp_token");showAuth();});
+$("assessmentForm").addEventListener("submit",async e=>{e.preventDefault();status("assessmentStatus","Reviewing submission…");try{const d=await request("/assessments",{method:"POST",body:JSON.stringify({skill:$("skill").value,experience:$("experience").value,evidence:$("evidence").value})});$("result").textContent=`Skill: ${d.skill}\nPrototype score: ${d.score}/100\nFeedback: ${d.feedback}\nSuggested next step: ${d.next_step}\n\nNote: This is a mock evaluation, not a validated AI score.`;status("assessmentStatus","Assessment saved.");loadHistory();}catch(err){status("assessmentStatus",err.message);}});
+async function loadHistory(){try{const d=await request("/assessments");$("history").innerHTML="";if(!d.items.length){$("history").textContent="No assessments yet.";return;}d.items.forEach(x=>{const el=document.createElement("div");el.className="tile";el.style.margin="8px 0";const title=document.createElement("strong");title.textContent=x.skill+" · "+x.score+"/100";const body=document.createElement("div");body.className="muted";body.textContent=x.feedback;el.append(title,body);$("history").append(el);});}catch(e){$("history").textContent=e.message;}}
+if(token){request("/auth/me").then(d=>showWorkspace(d)).catch(()=>{token="";sessionStorage.removeItem("sp_token");showAuth();});}
+</script>
+</body></html>
